@@ -1,98 +1,146 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { fetchKpiCatalog } from '@/api/kpis';
+import { colors, fontSize, radius, spacing } from '@/theme/tokens';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
-
+/**
+ * Pantalla de humo de la Fase 0: confirma que la app habla con el backend y que el catálogo de
+ * KPIs llega completo. En la Fase 2 la reemplaza la lista de partidos.
+ */
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const { data, isPending, error } = useQuery({
+    queryKey: ['kpi-catalog', 'SINGLES'],
+    queryFn: () => fetchKpiCatalog('SINGLES'),
+  });
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xl },
+      ]}
+    >
+      <Text style={styles.title}>Smart Tennis Lab</Text>
+      <Text style={styles.subtitle}>Catálogo de KPIs</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      {isPending && <ActivityIndicator color={colors.primary} style={styles.loader} />}
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      {error && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorTitle}>No se pudo conectar con el backend</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <Text style={styles.errorHint}>
+            Revisá que el backend esté corriendo y que EXPO_PUBLIC_API_URL apunte a la IP de tu
+            máquina en la red local (no a localhost, que el celular no ve).
+          </Text>
+        </View>
+      )}
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      {data?.categories.map((category) => (
+        <View key={category.code} style={styles.category}>
+          <Text style={styles.categoryTitle}>{category.label}</Text>
+          {category.kpis.map((kpi) => (
+            <View key={kpi.code} style={styles.kpiRow}>
+              <Text style={styles.kpiLabel}>{kpi.label}</Text>
+              <Text style={kpi.kind === 'COUNTER' ? styles.badgeCounter : styles.badgeDerived}>
+                {kpi.kind === 'COUNTER' ? 'tap' : 'calculado'}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: colors.background,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  content: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
   },
   title: {
-    textAlign: 'center',
+    color: colors.text,
+    fontSize: fontSize.xl,
+    fontWeight: '700',
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: fontSize.md,
+    marginTop: -spacing.md,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  loader: {
+    marginTop: spacing.xl,
+  },
+  errorBox: {
+    backgroundColor: colors.surface,
+    borderColor: colors.danger,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  errorTitle: {
+    color: colors.danger,
+    fontSize: fontSize.md,
+    fontWeight: '600',
+  },
+  errorDetail: {
+    color: colors.text,
+    fontSize: fontSize.sm,
+  },
+  errorHint: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+  },
+  category: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  categoryTitle: {
+    color: colors.primary,
+    fontSize: fontSize.md,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  kpiRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  kpiLabel: {
+    color: colors.text,
+    fontSize: fontSize.sm,
+    flexShrink: 1,
+  },
+  badgeCounter: {
+    color: colors.primaryText,
+    backgroundColor: colors.primary,
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  badgeDerived: {
+    color: colors.textMuted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    fontSize: fontSize.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
   },
 });

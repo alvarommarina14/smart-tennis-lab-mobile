@@ -1,16 +1,19 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "name": "Smart Tennis Lab",
+    "slug": "smart-tennis-lab",
+    "version": "0.1.0",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "smarttennislab",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smarttennislab.app"
     },
     "android": {
+      "package": "com.smarttennislab.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -25,6 +28,8 @@
     },
     "plugins": [
       "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
       [
         "expo-splash-screen",
         {
