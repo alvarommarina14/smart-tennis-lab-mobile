@@ -59,6 +59,7 @@ export default function PlayerListScreen() {
             title={playerName(item)}
             subtitle={item.birthDate ? `Nacimiento ${formatDate(item.birthDate)}` : undefined}
             badge={item.dominantHand === 'LEFT' ? 'Zurdo' : undefined}
+            onPress={() => router.push({ pathname: '/players/[id]', params: { id: item.id } })}
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
