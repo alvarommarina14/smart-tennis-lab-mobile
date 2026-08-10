@@ -8,19 +8,17 @@
     "scheme": "smarttennislab",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "supportsTablet": true,
       "bundleIdentifier": "com.smarttennislab.app"
     },
     "android": {
       "package": "com.smarttennislab.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F1418",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+      }
     },
     "web": {
       "output": "static",
@@ -33,19 +31,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0F1418",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-      "expo-font",
-      "expo-image",
-      "expo-status-bar",
-      "expo-web-browser"
+      ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }
