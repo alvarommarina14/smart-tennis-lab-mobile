@@ -14,6 +14,7 @@ import {
   finishLocalSet,
   getLocalMatch,
   insertLocalSet,
+  listPointOutcomes,
   listSets,
   newId,
   recordTap,
@@ -21,10 +22,16 @@ import {
   type LocalMatch,
   type LocalSet,
 } from '@/db/localMatches';
+import { buildScoreboard, type PointOutcome } from '@/lib/tennisScore';
 import { useSync } from '@/sync/useSync';
 import { colors, fontSize, radius, spacing, MIN_TAP_TARGET } from '@/theme/tokens';
 
 const AUTO_SYNC_INTERVAL_MS = 30_000;
+
+function isPointKpi(code: string) {
+  return code === 'POINT_WON' || code === 'POINT_LOST';
+}
+
 export default function CaptureScreen() {
   useKeepAwake();
 
@@ -36,10 +43,15 @@ export default function CaptureScreen() {
   const [match, setMatch] = useState<LocalMatch | null>(null);
   const [sets, setSets] = useState<LocalSet[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [points, setPoints] = useState<PointOutcome[]>([]);
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
 
   const currentSet = sets.length > 0 ? sets[sets.length - 1] : null;
+  const scoreboard = buildScoreboard(
+    sets.map((set) => set.id),
+    points
+  );
 
   const { data: catalog, error: catalogError } = useQuery({
     queryKey: ['kpi-catalog', match?.discipline ?? 'SINGLES'],
@@ -49,14 +61,16 @@ export default function CaptureScreen() {
   });
 
   const reload = useCallback(async () => {
-    const [loadedMatch, loadedSets, loadedCounts] = await Promise.all([
+    const [loadedMatch, loadedSets, loadedCounts, loadedPoints] = await Promise.all([
       getLocalMatch(matchId),
       listSets(matchId),
       countsByKpi(matchId),
+      listPointOutcomes(matchId),
     ]);
     setMatch(loadedMatch);
     setSets(loadedSets);
     setCounts(loadedCounts);
+    setPoints(loadedPoints);
     setLoading(false);
   }, [matchId]);
 
@@ -71,6 +85,12 @@ export default function CaptureScreen() {
 
   async function tap(kpi: Kpi) {
     setCounts((previous) => ({ ...previous, [kpi.code]: (previous[kpi.code] ?? 0) + 1 }));
+    if (isPointKpi(kpi.code)) {
+      setPoints((previous) => [
+        ...previous,
+        { setId: currentSet?.id ?? null, won: kpi.code === 'POINT_WON' },
+      ]);
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await recordTap({ matchId, setId: currentSet?.id ?? null, kpiCode: kpi.code });
     refreshPending();
@@ -86,6 +106,9 @@ export default function CaptureScreen() {
       ...previous,
       [removed.kpi_code]: Math.max(0, (previous[removed.kpi_code] ?? 0) - 1),
     }));
+    if (isPointKpi(removed.kpi_code)) {
+      setPoints((previous) => previous.slice(0, -1));
+    }
     refreshPending();
   }
 
@@ -149,21 +172,49 @@ export default function CaptureScreen() {
       <Stack.Screen options={{ title: match.player_name ?? 'Captura' }} />
 
       <View style={styles.scoreboard}>
-        <View style={styles.scoreColumn}>
-          <Text style={styles.scoreLabel}>Ganados</Text>
-          <Text style={styles.scoreValue}>{won}</Text>
+        <View style={styles.scoreRow}>
+          <View style={styles.side}>
+            <Text style={styles.sideName} numberOfLines={1}>
+              {match.player_name ?? 'Alumno'}
+            </Text>
+            <Text style={styles.gamePoints}>{scoreboard.currentGame.player}</Text>
+            <Text style={styles.games}>{scoreboard.currentSet.player}</Text>
+          </View>
+
+          <View style={styles.middle}>
+            <Text style={styles.setLabel}>Set {currentSet?.set_number ?? 1}</Text>
+            {scoreboard.currentGame.tiebreak ? (
+              <Text style={styles.tiebreak}>TIEBREAK</Text>
+            ) : (
+              <Text style={styles.gamesLabel}>juegos</Text>
+            )}
+            {scoreboard.previousSets.length > 0 ? (
+              <Text style={styles.previousSets}>
+                {scoreboard.previousSets
+                  .map((set) => `${set.player}-${set.opponent}`)
+                  .join('  ')}
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.side}>
+            <Text style={styles.sideName} numberOfLines={1}>
+              {match.opponent_name ?? 'Rival'}
+            </Text>
+            <Text style={styles.gamePoints}>{scoreboard.currentGame.opponent}</Text>
+            <Text style={styles.games}>{scoreboard.currentSet.opponent}</Text>
+          </View>
         </View>
-        <View style={styles.scoreCenter}>
-          <Text style={styles.setLabel}>Set {currentSet?.set_number ?? 1}</Text>
+
+        <View style={styles.statusRow}>
+          <Text style={styles.totals}>
+            Puntos {won}–{lost}
+          </Text>
           {pending > 0 ? (
             <Text style={styles.pendingLabel}>{pending} sin subir</Text>
           ) : (
             <Text style={styles.syncedLabel}>{syncing ? 'Sincronizando…' : 'Al día'}</Text>
           )}
-        </View>
-        <View style={styles.scoreColumn}>
-          <Text style={styles.scoreLabel}>Perdidos</Text>
-          <Text style={styles.scoreValue}>{lost}</Text>
         </View>
       </View>
 
@@ -254,35 +305,68 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   scoreboard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
-  scoreColumn: {
-    flex: 1,
+  scoreRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  scoreCenter: {
+  side: {
     flex: 1,
     alignItems: 'center',
     gap: 2,
   },
-  scoreLabel: {
+  sideName: {
     color: colors.textMuted,
     fontSize: fontSize.xs,
     textTransform: 'uppercase',
   },
-  scoreValue: {
+  gamePoints: {
     color: colors.text,
-    fontSize: fontSize.xl,
+    fontSize: fontSize.xxl,
     fontWeight: '700',
   },
-  setLabel: {
+  games: {
     color: colors.primary,
     fontSize: fontSize.lg,
     fontWeight: '700',
+  },
+  middle: {
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: spacing.sm,
+  },
+  setLabel: {
+    color: colors.primary,
+    fontSize: fontSize.md,
+    fontWeight: '700',
+  },
+  gamesLabel: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
+    textTransform: 'uppercase',
+  },
+  tiebreak: {
+    color: colors.warning,
+    fontSize: fontSize.xs,
+    fontWeight: '700',
+  },
+  previousSets: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  totals: {
+    color: colors.textMuted,
+    fontSize: fontSize.xs,
   },
   pendingLabel: {
     color: colors.warning,
