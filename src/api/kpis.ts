@@ -22,10 +22,6 @@ export type KpiCatalog = {
   categories: KpiCategory[];
 };
 
-/**
- * La app nunca hardcodea la lista de KPIs: la pide acá y arma la pantalla con lo que llega. Así,
- * cuando se agreguen los KPIs de dobles, alcanza con redeployar el backend.
- */
 export function fetchKpiCatalog(discipline: Discipline = 'SINGLES'): Promise<KpiCatalog> {
   return apiRequest<KpiCatalog>(`/api/v1/kpis?discipline=${discipline}`);
 }
