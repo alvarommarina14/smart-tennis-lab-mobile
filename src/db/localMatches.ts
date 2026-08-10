@@ -182,6 +182,17 @@ export async function countsByKpi(matchId: string) {
   return Object.fromEntries(rows.map((row) => [row.kpi_code, row.total]));
 }
 
+export async function listPointOutcomes(matchId: string) {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ set_id: string | null; kpi_code: string }>(
+    `SELECT set_id, kpi_code FROM match_events
+     WHERE match_id = ? AND deleted = 0 AND kpi_code IN ('POINT_WON', 'POINT_LOST')
+     ORDER BY client_seq ASC`,
+    [matchId]
+  );
+  return rows.map((row) => ({ setId: row.set_id, won: row.kpi_code === 'POINT_WON' }));
+}
+
 export async function listPendingEvents(limit = 500) {
   const db = await getDatabase();
   return db.getAllAsync<LocalEvent>(
