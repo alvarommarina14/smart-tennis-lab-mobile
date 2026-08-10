@@ -67,6 +67,7 @@ export async function syncNow(): Promise<SyncOutcome> {
         tournament: match.tournament,
         surface: match.surface,
         discipline: match.discipline,
+        format: match.format,
         startedAt: match.started_at,
       });
 

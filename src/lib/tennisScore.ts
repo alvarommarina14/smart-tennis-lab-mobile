@@ -1,7 +1,12 @@
+export type MatchFormat = 'BEST_OF_3_SETS' | 'TWO_SETS_SUPER_TIEBREAK';
+
 export type PointOutcome = { setId: string | null; won: boolean };
+
+export type SetKind = 'GAMES' | 'SUPER_TIEBREAK';
 
 export type SetScore = {
   setId: string | null;
+  kind: SetKind;
   player: number;
   opponent: number;
 };
@@ -24,8 +29,14 @@ const BEHIND_ADVANTAGE = '–';
 const TIEBREAK_AT = 6;
 const POINTS_TO_WIN_GAME = 4;
 const POINTS_TO_WIN_TIEBREAK = 7;
+const POINTS_TO_WIN_SUPER_TIEBREAK = 10;
+const SUPER_TIEBREAK_SET_INDEX = 2;
 
-export function buildScoreboard(setIds: string[], points: PointOutcome[]): Scoreboard {
+export function buildScoreboard(
+  setIds: string[],
+  points: PointOutcome[],
+  format: MatchFormat = 'BEST_OF_3_SETS'
+): Scoreboard {
   const bySet = new Map<string, PointOutcome[]>();
   for (const setId of setIds) {
     bySet.set(setId, []);
@@ -41,13 +52,13 @@ export function buildScoreboard(setIds: string[], points: PointOutcome[]): Score
   if (bySet.size === 0) {
     return {
       previousSets: [],
-      currentSet: { setId: null, player: 0, opponent: 0 },
+      currentSet: { setId: null, kind: 'GAMES', player: 0, opponent: 0 },
       currentGame: { player: '0', opponent: '0', tiebreak: false },
     };
   }
 
-  const scored = [...bySet.entries()].map(([setId, setPoints]) =>
-    scoreSet(setId === '' ? null : setId, setPoints)
+  const scored = [...bySet.entries()].map(([setId, setPoints], index) =>
+    scoreSet(setId === '' ? null : setId, setPoints, kindOfSet(index, format))
   );
   const current = scored[scored.length - 1];
 
@@ -58,7 +69,17 @@ export function buildScoreboard(setIds: string[], points: PointOutcome[]): Score
   };
 }
 
-function scoreSet(setId: string | null, points: PointOutcome[]) {
+function kindOfSet(index: number, format: MatchFormat): SetKind {
+  return format === 'TWO_SETS_SUPER_TIEBREAK' && index === SUPER_TIEBREAK_SET_INDEX
+    ? 'SUPER_TIEBREAK'
+    : 'GAMES';
+}
+
+function scoreSet(setId: string | null, points: PointOutcome[], kind: SetKind) {
+  if (kind === 'SUPER_TIEBREAK') {
+    return scoreSuperTiebreak(setId, points);
+  }
+
   let playerGames = 0;
   let opponentGames = 0;
   let playerPoints = 0;
@@ -86,9 +107,36 @@ function scoreSet(setId: string | null, points: PointOutcome[]) {
   }
 
   return {
-    score: { setId, player: playerGames, opponent: opponentGames },
+    score: { setId, kind: 'GAMES' as SetKind, player: playerGames, opponent: opponentGames },
     game: labelGame(playerPoints, opponentPoints, isTiebreak(playerGames, opponentGames)),
   };
+}
+
+// El super tiebreak reemplaza al tercer set: no hay juegos, el set es un solo tiebreak a 10.
+function scoreSuperTiebreak(setId: string | null, points: PointOutcome[]) {
+  let player = 0;
+  let opponent = 0;
+
+  for (const point of points) {
+    if (point.won) {
+      player += 1;
+    } else {
+      opponent += 1;
+    }
+  }
+
+  return {
+    score: { setId, kind: 'SUPER_TIEBREAK' as SetKind, player, opponent },
+    game: { player: String(player), opponent: String(opponent), tiebreak: true },
+  };
+}
+
+export function isSuperTiebreakWon(score: SetScore) {
+  if (score.kind !== 'SUPER_TIEBREAK') {
+    return false;
+  }
+  const leader = Math.max(score.player, score.opponent);
+  return leader >= POINTS_TO_WIN_SUPER_TIEBREAK && Math.abs(score.player - score.opponent) >= 2;
 }
 
 function isTiebreak(playerGames: number, opponentGames: number) {

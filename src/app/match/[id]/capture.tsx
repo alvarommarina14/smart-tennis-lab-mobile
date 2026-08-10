@@ -50,8 +50,10 @@ export default function CaptureScreen() {
   const currentSet = sets.length > 0 ? sets[sets.length - 1] : null;
   const scoreboard = buildScoreboard(
     sets.map((set) => set.id),
-    points
+    points,
+    match?.format
   );
+  const inSuperTiebreak = scoreboard.currentSet.kind === 'SUPER_TIEBREAK';
 
   const { data: catalog, error: catalogError } = useQuery({
     queryKey: ['kpi-catalog', match?.discipline ?? 'SINGLES'],
@@ -178,12 +180,18 @@ export default function CaptureScreen() {
               {match.player_name ?? 'Alumno'}
             </Text>
             <Text style={styles.gamePoints}>{scoreboard.currentGame.player}</Text>
-            <Text style={styles.games}>{scoreboard.currentSet.player}</Text>
+            {inSuperTiebreak ? null : (
+              <Text style={styles.games}>{scoreboard.currentSet.player}</Text>
+            )}
           </View>
 
           <View style={styles.middle}>
-            <Text style={styles.setLabel}>Set {currentSet?.set_number ?? 1}</Text>
-            {scoreboard.currentGame.tiebreak ? (
+            <Text style={styles.setLabel}>
+              {inSuperTiebreak ? 'Super TB' : `Set ${currentSet?.set_number ?? 1}`}
+            </Text>
+            {inSuperTiebreak ? (
+              <Text style={styles.tiebreak}>a 10</Text>
+            ) : scoreboard.currentGame.tiebreak ? (
               <Text style={styles.tiebreak}>TIEBREAK</Text>
             ) : (
               <Text style={styles.gamesLabel}>juegos</Text>
@@ -202,7 +210,9 @@ export default function CaptureScreen() {
               {match.opponent_name ?? 'Rival'}
             </Text>
             <Text style={styles.gamePoints}>{scoreboard.currentGame.opponent}</Text>
-            <Text style={styles.games}>{scoreboard.currentSet.opponent}</Text>
+            {inSuperTiebreak ? null : (
+              <Text style={styles.games}>{scoreboard.currentSet.opponent}</Text>
+            )}
           </View>
         </View>
 

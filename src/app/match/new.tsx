@@ -9,8 +9,20 @@ import { fetchPlayers, playerName } from '@/api/players';
 import { Button, EmptyState, ErrorBox, Field, ListRow, Loading, Segmented } from '@/components/ui';
 import { insertLocalMatch, insertLocalSet, newId } from '@/db/localMatches';
 import { SURFACE_OPTIONS } from '@/lib/format';
+import type { MatchFormat } from '@/lib/tennisScore';
 import { syncNow } from '@/sync/sync';
 import { colors, fontSize, spacing } from '@/theme/tokens';
+
+const FORMAT_OPTIONS: { value: MatchFormat; label: string }[] = [
+  { value: 'BEST_OF_3_SETS', label: '3 sets' },
+  { value: 'TWO_SETS_SUPER_TIEBREAK', label: '2 sets y super tiebreak' },
+];
+
+const FORMAT_HINTS: Record<MatchFormat, string> = {
+  BEST_OF_3_SETS: 'Si empatan los dos primeros, el tercero es un set completo.',
+  TWO_SETS_SUPER_TIEBREAK:
+    'Si empatan los dos primeros, el tercer set se reemplaza por un tiebreak a 10 con 2 de diferencia.',
+};
 
 export default function NewMatchScreen() {
   const insets = useSafeAreaInsets();
@@ -20,6 +32,7 @@ export default function NewMatchScreen() {
   const [opponentName, setOpponentName] = useState('');
   const [tournament, setTournament] = useState('');
   const [surface, setSurface] = useState<Surface | null>(null);
+  const [format, setFormat] = useState<MatchFormat>('BEST_OF_3_SETS');
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +63,7 @@ export default function NewMatchScreen() {
         tournament: tournament.trim() || null,
         surface,
         discipline: 'SINGLES',
+        format,
         startedAt,
       });
       await insertLocalSet({ id: newId(), matchId, setNumber: 1, startedAt });
@@ -117,6 +131,14 @@ export default function NewMatchScreen() {
           onChange={setSurface}
         />
 
+        <Segmented
+          label="Formato"
+          options={FORMAT_OPTIONS}
+          value={format}
+          onChange={setFormat}
+        />
+        <Text style={styles.formatHint}>{FORMAT_HINTS[format]}</Text>
+
         <Button
           title={selectedPlayer ? `Empezar partido de ${playerName(selectedPlayer)}` : 'Empezar partido'}
           onPress={start}
@@ -157,6 +179,11 @@ const styles = StyleSheet.create({
   },
   players: {
     gap: spacing.sm,
+  },
+  formatHint: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    marginTop: -spacing.sm,
   },
   hint: {
     color: colors.textMuted,
