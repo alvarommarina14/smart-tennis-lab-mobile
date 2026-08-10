@@ -1,19 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useAuthStore } from '@/auth/store';
+import { getDatabase } from '@/db/database';
 import { colors } from '@/theme/tokens';
 
 export default function RootLayout() {
-  // Se crea una sola vez por montaje de la app, no en cada render.
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            // En la cancha la señal va y viene: reintentar una vez y no refetchear solo.
             retry: 1,
             refetchOnWindowFocus: false,
             staleTime: 30_000,
@@ -26,14 +26,47 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.surface },
-            headerTintColor: colors.text,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        />
+        <RootNavigator />
       </SafeAreaProvider>
     </QueryClientProvider>
+  );
+}
+
+function RootNavigator() {
+  const status = useAuthStore((state) => state.status);
+  const bootstrap = useAuthStore((state) => state.bootstrap);
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    getDatabase();
+    bootstrap();
+  }, [bootstrap]);
+
+  useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+
+    const onLoginScreen = segments[0] === 'login';
+
+    if (status === 'signedOut' && !onLoginScreen) {
+      router.replace('/login');
+    } else if (status === 'signedIn' && onLoginScreen) {
+      router.replace('/');
+    }
+  }, [status, segments, router]);
+
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ title: 'Partidos' }} />
+    </Stack>
   );
 }

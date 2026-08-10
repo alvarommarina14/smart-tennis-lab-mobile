@@ -1,13 +1,4 @@
-/**
- * Tokens de diseño de Smart Tennis Lab.
- *
- * La app se usa al aire libre, con sol, y con el profe mirando la cancha y no la pantalla. De ahí
- * las tres reglas que mandan sobre todo lo demás: contraste alto, tipografía grande y áreas de
- * toque generosas.
- */
-
 export const colors = {
-  // Verde pista de polvo de ladrillo invertido: fondo oscuro para que se lea con sol directo.
   background: '#0F1418',
   surface: '#1A2129',
   surfaceRaised: '#232C36',
@@ -16,7 +7,7 @@ export const colors = {
   text: '#F2F5F7',
   textMuted: '#9AA7B4',
 
-  primary: '#C8FF4D', // verde pelota de tenis
+  primary: '#C8FF4D',
   primaryText: '#0F1418',
 
   danger: '#FF5C5C',
@@ -49,8 +40,4 @@ export const fontSize = {
   xxl: 40,
 } as const;
 
-/**
- * Mínimo de 64 px, por encima de los 44/48 que recomiendan las guías de accesibilidad: el profe
- * toca sin mirar, así que el margen de error tiene que ser mayor que el de una app común.
- */
 export const MIN_TAP_TARGET = 64;
