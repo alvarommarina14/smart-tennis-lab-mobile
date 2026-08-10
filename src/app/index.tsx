@@ -1,59 +1,119 @@
 import { useQuery } from '@tanstack/react-query';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fetchKpiCatalog } from '@/api/kpis';
+import type { MatchSummary } from '@/api/matches';
+import { useAuthStore } from '@/auth/store';
+import { Button, EmptyState, ErrorBox, ListRow, Loading } from '@/components/ui';
+import { formatDateTime, statusLabel } from '@/lib/format';
+import { loadMatchFeed } from '@/lib/matchFeed';
+import { useSync } from '@/sync/useSync';
 import { colors, fontSize, radius, spacing } from '@/theme/tokens';
 
-/**
- * Pantalla de humo de la Fase 0: confirma que la app habla con el backend y que el catálogo de
- * KPIs llega completo. En la Fase 2 la reemplaza la lista de partidos.
- */
-export default function HomeScreen() {
+export default function MatchListScreen() {
   const insets = useSafeAreaInsets();
-  const { data, isPending, error } = useQuery({
-    queryKey: ['kpi-catalog', 'SINGLES'],
-    queryFn: () => fetchKpiCatalog('SINGLES'),
+  const router = useRouter();
+  const coach = useAuthStore((state) => state.coach);
+  const signOut = useAuthStore((state) => state.signOut);
+  const { pending, syncing, sync, refreshPending } = useSync();
+
+  const { data, isPending, error, refetch, isRefetching } = useQuery({
+    queryKey: ['matches'],
+    queryFn: () => loadMatchFeed(),
   });
 
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      refreshPending();
+    }, [refetch, refreshPending])
+  );
+
+  const openMatch = (match: MatchSummary) => {
+    router.push({ pathname: '/match/[id]/capture', params: { id: match.id } });
+  };
+
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xl },
-      ]}
-    >
-      <Text style={styles.title}>Smart Tennis Lab</Text>
-      <Text style={styles.subtitle}>Catálogo de KPIs</Text>
+    <View style={styles.screen}>
+      <FlatList
+        data={data ?? []}
+        keyExtractor={(match) => match.id}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xxl }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={colors.primary}
+          />
+        }
+        ListHeaderComponent={
+          <View style={styles.header}>
+            {coach ? <Text style={styles.greeting}>Hola, {coach.fullName}</Text> : null}
 
-      {isPending && <ActivityIndicator color={colors.primary} style={styles.loader} />}
+            {pending > 0 ? (
+              <View style={styles.pendingBox}>
+                <Text style={styles.pendingText}>
+                  {pending} {pending === 1 ? 'tap sin sincronizar' : 'taps sin sincronizar'}
+                </Text>
+                <Button
+                  title="Sincronizar"
+                  variant="secondary"
+                  loading={syncing}
+                  onPress={() => sync()}
+                  style={styles.pendingButton}
+                />
+              </View>
+            ) : null}
 
-      {error && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorTitle}>No se pudo conectar con el backend</Text>
-          <Text style={styles.errorDetail}>{error.message}</Text>
-          <Text style={styles.errorHint}>
-            Revisá que el backend esté corriendo y que EXPO_PUBLIC_API_URL apunte a la IP de tu
-            máquina en la red local (no a localhost, que el celular no ve).
-          </Text>
-        </View>
-      )}
-
-      {data?.categories.map((category) => (
-        <View key={category.code} style={styles.category}>
-          <Text style={styles.categoryTitle}>{category.label}</Text>
-          {category.kpis.map((kpi) => (
-            <View key={kpi.code} style={styles.kpiRow}>
-              <Text style={styles.kpiLabel}>{kpi.label}</Text>
-              <Text style={kpi.kind === 'COUNTER' ? styles.badgeCounter : styles.badgeDerived}>
-                {kpi.kind === 'COUNTER' ? 'tap' : 'calculado'}
-              </Text>
+            <Button
+              title="Nuevo partido"
+              onPress={() => router.push('/match/new')}
+            />
+            <View style={styles.secondaryActions}>
+              <Button
+                title="Alumnos"
+                variant="secondary"
+                onPress={() => router.push('/players')}
+                style={styles.flexButton}
+              />
+              <Button
+                title="Salir"
+                variant="secondary"
+                onPress={signOut}
+                style={styles.flexButton}
+              />
             </View>
-          ))}
-        </View>
-      ))}
-    </ScrollView>
+
+            {error ? (
+              <ErrorBox
+                title="No se pudo traer la lista de partidos"
+                message={error.message}
+              />
+            ) : null}
+            {isPending ? <Loading /> : null}
+          </View>
+        }
+        ListEmptyComponent={
+          isPending ? null : (
+            <EmptyState
+              title="Todavía no hay partidos"
+              hint="Creá uno y empezá a contar los puntos en la cancha."
+            />
+          )
+        }
+        renderItem={({ item }) => (
+          <ListRow
+            title={item.playerName ?? 'Alumno sin nombre'}
+            subtitle={`${item.opponentName ? `vs ${item.opponentName} · ` : ''}${formatDateTime(item.startedAt)}`}
+            badge={statusLabel(item.status)}
+            onPress={() => openMatch(item)}
+          />
+        )}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+    </View>
   );
 }
 
@@ -64,83 +124,40 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
-    gap: spacing.lg,
+    paddingTop: spacing.lg,
   },
-  title: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: '700',
+  header: {
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
-  subtitle: {
+  greeting: {
     color: colors.textMuted,
     fontSize: fontSize.md,
-    marginTop: -spacing.md,
   },
-  loader: {
-    marginTop: spacing.xl,
-  },
-  errorBox: {
+  pendingBox: {
     backgroundColor: colors.surface,
-    borderColor: colors.danger,
+    borderColor: colors.warning,
     borderWidth: 1,
     borderRadius: radius.md,
-    padding: spacing.lg,
+    padding: spacing.md,
     gap: spacing.sm,
   },
-  errorTitle: {
-    color: colors.danger,
-    fontSize: fontSize.md,
+  pendingText: {
+    color: colors.warning,
+    fontSize: fontSize.sm,
     fontWeight: '600',
   },
-  errorDetail: {
-    color: colors.text,
-    fontSize: fontSize.sm,
+  pendingButton: {
+    minHeight: 44,
   },
-  errorHint: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-  },
-  category: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  categoryTitle: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  kpiRow: {
+  secondaryActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: spacing.md,
   },
-  kpiLabel: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    flexShrink: 1,
+  flexButton: {
+    flex: 1,
   },
-  badgeCounter: {
-    color: colors.primaryText,
-    backgroundColor: colors.primary,
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  badgeDerived: {
-    color: colors.textMuted,
-    borderColor: colors.border,
-    borderWidth: 1,
-    fontSize: fontSize.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
+  separator: {
+    height: spacing.sm,
   },
 });
