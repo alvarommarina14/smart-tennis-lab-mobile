@@ -67,6 +67,7 @@ function RootNavigator() {
     >
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ title: 'Partidos' }} />
+      <Stack.Screen name="profile" options={{ title: 'Mi perfil' }} />
       <Stack.Screen name="players/index" options={{ title: 'Alumnos' }} />
       <Stack.Screen name="players/new" options={{ title: 'Nuevo alumno' }} />
       <Stack.Screen name="players/[id]" options={{ title: 'Alumno' }} />
