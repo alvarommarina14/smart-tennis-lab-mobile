@@ -12,7 +12,7 @@ El backend está en [`smart-tennis-lab-backend`](../backend).
 
 | | |
 |---|---|
-| Framework | Expo SDK 57 + React Native 0.86 |
+| Framework | Expo SDK 54 + React Native 0.81 |
 | Lenguaje | TypeScript (strict) |
 | Navegación | expo-router (typed routes) |
 | Estado servidor | TanStack Query |
@@ -54,8 +54,27 @@ npm run lint
 
 ```
 src/
-├── app/      pantallas (expo-router: el archivo define la ruta)
-├── api/      cliente HTTP y tipos de la API
-├── lib/      SQLite, cola de sincronización y utilidades
-└── theme/    tokens de diseño
+├── app/         pantallas (expo-router: el archivo define la ruta)
+├── api/         cliente HTTP y tipos de la API
+├── auth/        sesión en secure-store y store de Zustand
+├── components/  los pocos componentes que se repiten
+├── db/          SQLite local: partidos, sets y taps
+├── sync/        cola de sincronización contra el backend
+├── lib/         formateo de fechas y etiquetas
+└── theme/       tokens de diseño
 ```
+
+## Pantallas
+
+| Ruta | |
+|---|---|
+| `login` | entrar o crear la cuenta del profe |
+| `index` | lista de partidos, con los que todavía no subieron |
+| `players/` | alumnos y alta de alumno |
+| `match/new` | elegir alumno y arrancar el partido |
+| `match/[id]/capture` | la grilla de contadores, deshacer y separador de sets |
+| `match/[id]/report` | totales, porcentajes y desglose por set |
+
+La captura es la única pantalla que funciona entera sin señal: lee y escribe contra SQLite, y el
+sync corre solo cada 30 segundos y al terminar el partido. El reporte, en cambio, lo calcula el
+backend, así que necesita conexión.
