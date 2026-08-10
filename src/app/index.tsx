@@ -32,7 +32,11 @@ export default function MatchListScreen() {
   );
 
   const openMatch = (match: MatchSummary) => {
-    router.push({ pathname: '/match/[id]/capture', params: { id: match.id } });
+    if (match.status === 'IN_PROGRESS') {
+      router.push({ pathname: '/match/[id]/capture', params: { id: match.id } });
+    } else {
+      router.push({ pathname: '/match/[id]/report', params: { id: match.id } });
+    }
   };
 
   return (
