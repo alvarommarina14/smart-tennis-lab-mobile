@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto';
 import type { Discipline } from '@/api/kpis';
 import type { MatchStatus, Surface } from '@/api/matches';
 import { getDatabase } from '@/db/database';
+import type { MatchFormat } from '@/lib/tennisScore';
 
 export type LocalMatch = {
   id: string;
@@ -12,6 +13,7 @@ export type LocalMatch = {
   tournament: string | null;
   surface: Surface | null;
   discipline: Discipline;
+  format: MatchFormat;
   status: MatchStatus;
   started_at: string;
   finished_at: string | null;
@@ -50,13 +52,14 @@ export async function insertLocalMatch(match: {
   tournament: string | null;
   surface: Surface | null;
   discipline: Discipline;
+  format: MatchFormat;
   startedAt: string;
 }) {
   const db = await getDatabase();
   await db.runAsync(
     `INSERT OR REPLACE INTO matches
-       (id, player_id, player_name, opponent_name, tournament, surface, discipline, status, started_at, finished_at, synced)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'IN_PROGRESS', ?, NULL, 0)`,
+       (id, player_id, player_name, opponent_name, tournament, surface, discipline, format, status, started_at, finished_at, synced)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'IN_PROGRESS', ?, NULL, 0)`,
     [
       match.id,
       match.playerId,
@@ -65,6 +68,7 @@ export async function insertLocalMatch(match: {
       match.tournament,
       match.surface,
       match.discipline,
+      match.format,
       match.startedAt,
     ]
   );

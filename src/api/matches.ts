@@ -1,8 +1,10 @@
 import { apiRequest } from '@/api/client';
 import type { Discipline } from '@/api/kpis';
+import type { MatchFormat as MatchFormatValue } from '@/lib/tennisScore';
 
 export type MatchStatus = 'IN_PROGRESS' | 'FINISHED' | 'ABANDONED';
 export type Surface = 'CLAY' | 'HARD' | 'GRASS' | 'CARPET' | 'INDOOR';
+export type { MatchFormat } from '@/lib/tennisScore';
 
 export type MatchSummary = {
   id: string;
@@ -25,6 +27,7 @@ export type Match = MatchSummary & {
   tournament: string | null;
   surface: Surface | null;
   discipline: Discipline;
+  format: MatchFormatValue;
   notes: string | null;
   eventCount: number;
   sets: MatchSet[];
@@ -37,6 +40,7 @@ export type CreateMatchInput = {
   tournament?: string | null;
   surface?: Surface | null;
   discipline?: Discipline;
+  format?: MatchFormatValue;
   startedAt: string;
   notes?: string | null;
 };

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS matches (
   tournament    TEXT,
   surface       TEXT,
   discipline    TEXT NOT NULL DEFAULT 'SINGLES',
+  format        TEXT NOT NULL DEFAULT 'BEST_OF_3_SETS',
   status        TEXT NOT NULL DEFAULT 'IN_PROGRESS',
   started_at    TEXT NOT NULL,
   finished_at   TEXT,
@@ -49,8 +50,19 @@ export async function getDatabase() {
   if (!database) {
     database = await SQLite.openDatabaseAsync(DATABASE_NAME);
     await database.execAsync(SCHEMA);
+    await addMissingColumns(database);
   }
   return database;
+}
+
+// CREATE TABLE IF NOT EXISTS no agrega columnas a una base que ya existe en el celular del profe.
+async function addMissingColumns(db: SQLite.SQLiteDatabase) {
+  const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(matches)');
+  if (!columns.some((column) => column.name === 'format')) {
+    await db.execAsync(
+      "ALTER TABLE matches ADD COLUMN format TEXT NOT NULL DEFAULT 'BEST_OF_3_SETS'"
+    );
+  }
 }
 
 export async function resetDatabase() {
