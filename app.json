@@ -6,7 +6,7 @@
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "smarttennislab",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.smarttennislab.app"
@@ -14,7 +14,7 @@
     "android": {
       "package": "com.smarttennislab.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0F1418",
+        "backgroundColor": "#0C0D11",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -31,11 +31,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0F1418",
+          "backgroundColor": "#0C0D11",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

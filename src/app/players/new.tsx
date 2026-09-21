@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { createPlayer, type DominantHand } from '@/api/players';
-import { Button, ErrorBox, Field, Segmented } from '@/components/ui';
+import { Button, DateField, ErrorBox, Field, Segmented } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
 
 export default function NewPlayerScreen() {
@@ -76,12 +76,10 @@ export default function NewPlayerScreen() {
           autoCapitalize="words"
           error={fields.lastName}
         />
-        <Field
+        <DateField
           label="Fecha de nacimiento (opcional)"
           value={birthDate}
-          onChangeText={setBirthDate}
-          placeholder="AAAA-MM-DD"
-          autoCapitalize="none"
+          onChange={setBirthDate}
           error={fields.birthDate}
         />
 

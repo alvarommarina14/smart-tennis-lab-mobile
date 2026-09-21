@@ -24,7 +24,7 @@ import {
 } from '@/db/localMatches';
 import { buildScoreboard, type PointOutcome } from '@/lib/tennisScore';
 import { useSync } from '@/sync/useSync';
-import { colors, fontSize, radius, spacing, MIN_TAP_TARGET } from '@/theme/tokens';
+import { colors, fontSize, labelText, mono, radius, spacing, MIN_TAP_TARGET } from '@/theme/tokens';
 
 const AUTO_SYNC_INTERVAL_MS = 30_000;
 
@@ -315,7 +315,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   scoreboard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
@@ -330,17 +332,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   sideName: {
-    color: colors.textMuted,
-    fontSize: fontSize.xs,
-    textTransform: 'uppercase',
+    ...labelText,
+    letterSpacing: 0.6,
   },
   gamePoints: {
-    color: colors.text,
+    ...mono,
+    color: colors.textStrong,
     fontSize: fontSize.xxl,
     fontWeight: '700',
   },
   games: {
-    color: colors.primary,
+    ...mono,
+    color: colors.primaryBright,
     fontSize: fontSize.lg,
     fontWeight: '700',
   },
@@ -350,24 +353,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   setLabel: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '700',
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   gamesLabel: {
-    color: colors.textMuted,
+    color: colors.textFaint,
     fontSize: fontSize.xs,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   tiebreak: {
     color: colors.warning,
     fontSize: fontSize.xs,
     fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   previousSets: {
-    color: colors.textMuted,
+    ...mono,
+    color: colors.textFaint,
     fontSize: fontSize.sm,
-    fontWeight: '600',
   },
   statusRow: {
     flexDirection: 'row',
@@ -375,6 +383,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   totals: {
+    ...mono,
     color: colors.textMuted,
     fontSize: fontSize.xs,
   },
@@ -395,10 +404,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryTitle: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    ...labelText,
   },
   grid: {
     flexDirection: 'row',
@@ -410,6 +416,8 @@ const styles = StyleSheet.create({
     flexBasis: '47%',
     minHeight: MIN_TAP_TARGET + spacing.lg,
     backgroundColor: colors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -418,9 +426,11 @@ const styles = StyleSheet.create({
   },
   counterPressed: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   counterValue: {
-    color: colors.text,
+    ...mono,
+    color: colors.textStrong,
     fontSize: fontSize.xl,
     fontWeight: '700',
   },
@@ -436,7 +446,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopColor: colors.border,
     borderTopWidth: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
   },
   footerButton: {
     flex: 1,

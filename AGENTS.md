@@ -1,8 +1,9 @@
 # Expo HAS CHANGED
 
-Este proyecto está en **SDK 54**, fijado para que coincida con la versión de Expo Go del iPhone de
-prueba. Leer la doc de esa versión exacta antes de escribir código:
-https://docs.expo.dev/versions/v54.0.0/
+Este proyecto está en **SDK 57**. Leer la doc de esa versión exacta antes de escribir código:
+https://docs.expo.dev/versions/v57.0.0/
+
+El iPhone de prueba necesita Expo Go de SDK 57 (iOS 16.4 o superior).
 
 # Comentarios
 

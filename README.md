@@ -12,7 +12,7 @@ El backend está en [`smart-tennis-lab-backend`](../backend).
 
 | | |
 |---|---|
-| Framework | Expo SDK 54 + React Native 0.81 |
+| Framework | Expo SDK 57 + React Native 0.86 |
 | Lenguaje | TypeScript (strict) |
 | Navegación | expo-router (typed routes) |
 | Estado servidor | TanStack Query |

@@ -129,9 +129,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   title: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: fontSize.xl,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   subtitle: {
     color: colors.textMuted,

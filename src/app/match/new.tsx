@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Surface } from '@/api/matches';
 import { fetchPlayers, playerName } from '@/api/players';
-import { Button, EmptyState, ErrorBox, Field, ListRow, Loading, Segmented } from '@/components/ui';
+import { Button, EmptyState, ErrorBox, Field, Loading, Segmented, Select } from '@/components/ui';
 import { insertLocalMatch, insertLocalSet, newId } from '@/db/localMatches';
 import { SURFACE_OPTIONS } from '@/lib/format';
 import type { MatchFormat } from '@/lib/tennisScore';
@@ -90,27 +90,22 @@ export default function NewMatchScreen() {
           <ErrorBox title="No se pudo traer la lista de alumnos" message={playersError.message} />
         ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Alumno</Text>
-          <Text style={styles.sectionHint}>Tocá el alumno para elegirlo.</Text>
-        </View>
         {isPending ? <Loading /> : null}
         {players?.length === 0 ? (
           <EmptyState
             title="No tenés alumnos cargados"
-            hint="Un partido siempre es de un alumno: cargá al primero desde la pantalla de alumnos."
+            hint="Un partido siempre es de un alumno: cargá al primero para poder empezar."
+            action={{ label: 'Cargar un alumno', onPress: () => router.push('/players/new') }}
+          />
+        ) : players ? (
+          <Select
+            label="Alumno"
+            placeholder="Elegí un alumno"
+            options={players.map((player) => ({ value: player.id, label: playerName(player) }))}
+            value={playerId}
+            onChange={setPlayerId}
           />
         ) : null}
-        <View style={styles.players}>
-          {players?.map((player) => (
-            <ListRow
-              key={player.id}
-              title={playerName(player)}
-              selected={player.id === playerId}
-              onPress={() => setPlayerId(player.id)}
-            />
-          ))}
-        </View>
 
         <Field
           label="Rival (opcional)"
@@ -164,21 +159,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     gap: spacing.lg,
-  },
-  section: {
-    gap: 2,
-  },
-  sectionTitle: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '700',
-  },
-  sectionHint: {
-    color: colors.textMuted,
-    fontSize: fontSize.sm,
-  },
-  players: {
-    gap: spacing.sm,
   },
   formatHint: {
     color: colors.textMuted,

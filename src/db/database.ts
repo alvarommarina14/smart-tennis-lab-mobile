@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 const DATABASE_NAME = 'smarttennislab.db';
 
-let database: SQLite.SQLiteDatabase | null = null;
+let connection: Promise<SQLite.SQLiteDatabase> | null = null;
 
 const SCHEMA = `
 PRAGMA journal_mode = WAL;
@@ -46,12 +46,20 @@ CREATE INDEX IF NOT EXISTS ix_events_match ON match_events (match_id, client_seq
 CREATE INDEX IF NOT EXISTS ix_events_pending ON match_events (synced);
 `;
 
-export async function getDatabase() {
-  if (!database) {
-    database = await SQLite.openDatabaseAsync(DATABASE_NAME);
-    await database.execAsync(SCHEMA);
-    await addMissingColumns(database);
+export function getDatabase() {
+  if (!connection) {
+    connection = openAndMigrate().catch((error) => {
+      connection = null;
+      throw error;
+    });
   }
+  return connection;
+}
+
+async function openAndMigrate() {
+  const database = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  await database.execAsync(SCHEMA);
+  await addMissingColumns(database);
   return database;
 }
 

@@ -4,13 +4,19 @@ import { useCallback } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { MatchSummary } from '@/api/matches';
+import type { MatchStatus, MatchSummary } from '@/api/matches';
 import { useAuthStore } from '@/auth/store';
-import { Button, EmptyState, ErrorBox, ListRow, Loading } from '@/components/ui';
+import { Button, EmptyState, ErrorBox, ListRow, Loading, type BadgeTone } from '@/components/ui';
 import { formatDateTime, statusLabel } from '@/lib/format';
 import { loadMatchFeed } from '@/lib/matchFeed';
 import { useSync } from '@/sync/useSync';
 import { colors, fontSize, radius, spacing } from '@/theme/tokens';
+
+const STATUS_TONE: Record<MatchStatus, BadgeTone> = {
+  IN_PROGRESS: 'live',
+  FINISHED: 'done',
+  ABANDONED: 'neutral',
+};
 
 export default function MatchListScreen() {
   const insets = useSafeAreaInsets();
@@ -114,6 +120,7 @@ export default function MatchListScreen() {
             title={item.playerName ?? 'Alumno sin nombre'}
             subtitle={`${item.opponentName ? `vs ${item.opponentName} · ` : ''}${formatDateTime(item.startedAt)}`}
             badge={statusLabel(item.status)}
+            badgeTone={STATUS_TONE[item.status]}
             onPress={() => openMatch(item)}
           />
         )}
@@ -176,9 +183,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   headerButtonLabel: {
-    color: colors.primary,
+    color: colors.primaryBright,
     fontSize: fontSize.md,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   separator: {
     height: spacing.sm,

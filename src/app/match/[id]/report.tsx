@@ -8,7 +8,7 @@ import { fetchMatchReport, formatKpiValue, type KpiValue } from '@/api/reports';
 import { Button, ErrorBox, Loading } from '@/components/ui';
 import { formatDateTime, formatDuration, statusLabel } from '@/lib/format';
 import { useSync } from '@/sync/useSync';
-import { colors, fontSize, radius, spacing } from '@/theme/tokens';
+import { colors, fontSize, labelText, mono, radius, spacing } from '@/theme/tokens';
 
 export default function MatchReportScreen() {
   const insets = useSafeAreaInsets();
@@ -137,13 +137,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   headerCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.lg,
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: fontSize.lg,
     fontWeight: '700',
   },
@@ -156,22 +158,19 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   sectionTitle: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '700',
+    ...labelText,
     marginTop: spacing.md,
   },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.lg,
     gap: spacing.sm,
   },
   cardTitle: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    ...labelText,
   },
   kpiRow: {
     flexDirection: 'row',
@@ -185,12 +184,14 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   kpiValue: {
-    color: colors.text,
+    ...mono,
+    color: colors.textStrong,
     fontSize: fontSize.md,
     fontWeight: '700',
   },
   kpiValueDerived: {
-    color: colors.primary,
+    ...mono,
+    color: colors.primaryBright,
     fontSize: fontSize.md,
     fontWeight: '700',
   },

@@ -4,12 +4,18 @@ import { useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { MatchSummary } from '@/api/matches';
+import type { MatchStatus, MatchSummary } from '@/api/matches';
 import { fetchPlayer, playerName } from '@/api/players';
-import { EmptyState, ErrorBox, ListRow, Loading } from '@/components/ui';
+import { EmptyState, ErrorBox, ListRow, Loading, type BadgeTone } from '@/components/ui';
 import { formatDate, formatDateTime, statusLabel } from '@/lib/format';
 import { loadMatchFeed } from '@/lib/matchFeed';
-import { colors, fontSize, radius, spacing } from '@/theme/tokens';
+import { colors, fontSize, mono, radius, spacing } from '@/theme/tokens';
+
+const STATUS_TONE: Record<MatchStatus, BadgeTone> = {
+  IN_PROGRESS: 'live',
+  FINISHED: 'done',
+  ABANDONED: 'neutral',
+};
 
 export default function PlayerMatchesScreen() {
   const insets = useSafeAreaInsets();
@@ -95,6 +101,7 @@ export default function PlayerMatchesScreen() {
             title={item.opponentName ? `vs ${item.opponentName}` : 'Partido'}
             subtitle={formatDateTime(item.startedAt)}
             badge={statusLabel(item.status)}
+            badgeTone={STATUS_TONE[item.status]}
             onPress={() => openMatch(item)}
           />
         )}
@@ -118,13 +125,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.lg,
     gap: spacing.xs,
   },
   name: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: fontSize.lg,
     fontWeight: '700',
   },
@@ -138,7 +147,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   count: {
-    color: colors.primary,
+    ...mono,
+    color: colors.primaryBright,
     fontSize: fontSize.sm,
     fontWeight: '700',
     marginTop: spacing.xs,

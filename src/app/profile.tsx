@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { useAuthStore } from '@/auth/store';
 import { Button, ErrorBox, Field } from '@/components/ui';
-import { colors, fontSize, radius, spacing } from '@/theme/tokens';
+import { colors, fontSize, labelText, radius, spacing } from '@/theme/tokens';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -161,15 +161,15 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   section: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.lg,
     gap: spacing.lg,
   },
   sectionTitle: {
-    color: colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '700',
+    ...labelText,
   },
   saved: {
     color: colors.success,
