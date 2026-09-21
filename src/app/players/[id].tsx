@@ -59,7 +59,7 @@ export default function PlayerMatchesScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={colors.primary}
+            tintColor={colors.textStrong}
           />
         }
         ListHeaderComponent={

@@ -34,7 +34,7 @@ export default function PlayerListScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={colors.primary}
+            tintColor={colors.textStrong}
           />
         }
         ListHeaderComponent={

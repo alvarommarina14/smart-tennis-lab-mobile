@@ -10,7 +10,7 @@ import { Button, EmptyState, ErrorBox, ListRow, Loading, type BadgeTone } from '
 import { formatDateTime, statusLabel } from '@/lib/format';
 import { loadMatchFeed } from '@/lib/matchFeed';
 import { useSync } from '@/sync/useSync';
-import { colors, fontSize, radius, spacing } from '@/theme/tokens';
+import { colors, fontSize, labelText, radius, spacing } from '@/theme/tokens';
 
 const STATUS_TONE: Record<MatchStatus, BadgeTone> = {
   IN_PROGRESS: 'live',
@@ -70,12 +70,17 @@ export default function MatchListScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={colors.primary}
+            tintColor={colors.textStrong}
           />
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            {coach ? <Text style={styles.greeting}>Hola, {coach.fullName}</Text> : null}
+            {coach ? (
+              <View style={styles.greeting}>
+                <Text style={styles.greetingEyebrow}>Hola</Text>
+                <Text style={styles.greetingName}>{coach.fullName}</Text>
+              </View>
+            ) : null}
 
             {pending > 0 ? (
               <View style={styles.pendingBox}>
@@ -156,8 +161,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   greeting: {
-    color: colors.textMuted,
-    fontSize: fontSize.md,
+    gap: 2,
+    marginBottom: spacing.xs,
+  },
+  greetingEyebrow: {
+    ...labelText,
+  },
+  greetingName: {
+    color: colors.textStrong,
+    fontSize: fontSize.xl,
+    fontWeight: '700',
+    letterSpacing: -0.5,
   },
   pendingBox: {
     backgroundColor: colors.surface,
@@ -183,7 +197,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   headerButtonLabel: {
-    color: colors.primaryBright,
+    color: colors.textStrong,
     fontSize: fontSize.md,
     fontWeight: '600',
   },
